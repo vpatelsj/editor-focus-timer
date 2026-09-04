@@ -13,6 +13,14 @@ struct FocusClassifierTests {
             role: "AXTextArea",
             labels: ["editor content"]
         )))
+        #expect(FocusClassifier.isSourceEditor(.init(
+            role: "AXTextArea",
+            labels: ["", "crawler.go", ""]
+        )))
+        #expect(FocusClassifier.isSourceEditor(.init(
+            role: "AXTextArea",
+            labels: ["The editor is not accessible at this time. To enable screen reader optimized mode, use Shift+Option+F1"]
+        )))
     }
 
     @Test("rejects non-editor VS Code surfaces")

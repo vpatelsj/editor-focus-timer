@@ -18,12 +18,26 @@ func stringAttribute(_ name: CFString, from element: AXUIElement) -> String? {
 
 func focusedElement(for application: NSRunningApplication) -> AXUIElement? {
     let appElement = AXUIElementCreateApplication(application.processIdentifier)
+    _ = AXUIElementSetAttributeValue(
+        appElement,
+        "AXManualAccessibility" as CFString,
+        kCFBooleanTrue
+    )
     var value: CFTypeRef?
-    guard AXUIElementCopyAttributeValue(
+    if AXUIElementCopyAttributeValue(
         appElement,
         kAXFocusedUIElementAttribute as CFString,
         &value
-    ) == .success else {
+    ) == .success, let value {
+        return (value as! AXUIElement)
+    }
+
+    let systemElement = AXUIElementCreateSystemWide()
+    guard AXUIElementCopyAttributeValue(
+        systemElement,
+        kAXFocusedUIElementAttribute as CFString,
+        &value
+    ) == .success, let value else {
         return nil
     }
     return (value as! AXUIElement)
@@ -51,7 +65,8 @@ func currentState() -> ProbeState {
         return .unfocused
     }
 
-    return FocusClassifier.isSourceEditor(snapshot(of: element)) ? .focused : .unfocused
+    let currentSnapshot = snapshot(of: element)
+    return FocusClassifier.isSourceEditor(currentSnapshot) ? .focused : .unfocused
 }
 
 func emit(_ state: ProbeState, previous: inout ProbeState?) {
