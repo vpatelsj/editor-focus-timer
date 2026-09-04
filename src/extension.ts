@@ -23,6 +23,7 @@ function activeDocumentSnapshot(): DocumentSnapshot | undefined {
 
 export function activate(context: vscode.ExtensionContext): void {
   const timer = new SessionTimer();
+  let focusState: FocusState = 'unfocused';
   const status = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right,
     100,
@@ -31,8 +32,19 @@ export function activate(context: vscode.ExtensionContext): void {
     'editorFocusTimer.reset',
     () => timer.reset(),
   );
+  const focusedCommand = vscode.commands.registerCommand(
+    'editorFocusTimer.focusProbeFocused',
+    () => {
+      focusState = 'focused';
+    },
+  );
+  const unfocusedCommand = vscode.commands.registerCommand(
+    'editorFocusTimer.focusProbeUnfocused',
+    () => {
+      focusState = 'unfocused';
+    },
+  );
   status.command = 'editorFocusTimer.reset';
-  let focusState: FocusState = 'unfocused';
 
   const probe = new FocusProbe(
     path.join(context.extensionPath, 'dist', 'native', 'editor-focus-probe'),
@@ -61,6 +73,8 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     status,
     resetCommand,
+    focusedCommand,
+    unfocusedCommand,
     probe,
     new vscode.Disposable(() => clearInterval(interval)),
   );

@@ -25,6 +25,18 @@
         "title": "Reset",
         "category": "Editor Focus Timer"
       }
+    ],
+    "keybindings": [
+      {
+        "command": "editorFocusTimer.focusProbeFocused",
+        "key": "cmd+ctrl+shift+alt+f20",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "editorFocusTimer.focusProbeUnfocused",
+        "key": "cmd+ctrl+shift+alt+f20",
+        "when": "!editorTextFocus"
+      }
     ]
   },
   "main": "./out/extension.js",

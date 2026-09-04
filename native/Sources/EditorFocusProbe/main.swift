@@ -8,65 +8,29 @@ enum ProbeState: String {
     case permissionRequired = "permission-required"
 }
 
-func stringAttribute(_ name: CFString, from element: AXUIElement) -> String? {
-    var value: CFTypeRef?
-    guard AXUIElementCopyAttributeValue(element, name, &value) == .success else {
-        return nil
-    }
-    return value as? String
-}
-
-func focusedElement(for application: NSRunningApplication) -> AXUIElement? {
-    let appElement = AXUIElementCreateApplication(application.processIdentifier)
-    _ = AXUIElementSetAttributeValue(
-        appElement,
-        "AXManualAccessibility" as CFString,
-        kCFBooleanTrue
-    )
-    var value: CFTypeRef?
-    if AXUIElementCopyAttributeValue(
-        appElement,
-        kAXFocusedUIElementAttribute as CFString,
-        &value
-    ) == .success, let value {
-        return (value as! AXUIElement)
+func postFocusProbe() {
+    guard let keyDown = CGEvent(
+        keyboardEventSource: nil,
+        virtualKey: 0x5A,
+        keyDown: true
+    ), let keyUp = CGEvent(
+        keyboardEventSource: nil,
+        virtualKey: 0x5A,
+        keyDown: false
+    ) else {
+        return
     }
 
-    let systemElement = AXUIElementCreateSystemWide()
-    guard AXUIElementCopyAttributeValue(
-        systemElement,
-        kAXFocusedUIElementAttribute as CFString,
-        &value
-    ) == .success, let value else {
-        return nil
-    }
-    return (value as! AXUIElement)
-}
-
-func snapshot(of element: AXUIElement) -> AccessibilitySnapshot {
-    let attributes: [CFString] = [
-        kAXTitleAttribute as CFString,
-        kAXDescriptionAttribute as CFString,
-        kAXHelpAttribute as CFString,
-        "AXDOMIdentifier" as CFString,
-        "AXIdentifier" as CFString,
+    let flags: CGEventFlags = [
+        .maskCommand,
+        .maskControl,
+        .maskAlternate,
+        .maskShift,
     ]
-    return AccessibilitySnapshot(
-        role: stringAttribute(kAXRoleAttribute as CFString, from: element) ?? "",
-        labels: attributes.compactMap { stringAttribute($0, from: element) }
-    )
-}
-
-func currentState() -> ProbeState {
-    guard let application = NSWorkspace.shared.frontmostApplication,
-          application.bundleIdentifier == "com.microsoft.VSCode",
-          let element = focusedElement(for: application)
-    else {
-        return .unfocused
-    }
-
-    let currentSnapshot = snapshot(of: element)
-    return FocusClassifier.isSourceEditor(currentSnapshot) ? .focused : .unfocused
+    keyDown.flags = flags
+    keyUp.flags = flags
+    keyDown.post(tap: .cghidEventTap)
+    keyUp.post(tap: .cghidEventTap)
 }
 
 func emit(_ state: ProbeState, previous: inout ProbeState?) {
@@ -81,11 +45,17 @@ _ = AXIsProcessTrustedWithOptions(prompt)
 
 var previousState: ProbeState?
 while true {
-    if AXIsProcessTrusted() {
-        emit(currentState(), previous: &previousState)
-        Thread.sleep(forTimeInterval: 0.25)
-    } else {
+    let action = probeAction(
+        isTrusted: AXIsProcessTrusted(),
+        frontmostBundleIdentifier: NSWorkspace.shared.frontmostApplication?.bundleIdentifier
+    )
+    switch action {
+    case .permissionRequired:
         emit(.permissionRequired, previous: &previousState)
-        Thread.sleep(forTimeInterval: 1.0)
+    case .idle:
+        emit(.unfocused, previous: &previousState)
+    case .sendChord:
+        postFocusProbe()
     }
+    Thread.sleep(forTimeInterval: action == .permissionRequired ? 1.0 : 0.25)
 }
