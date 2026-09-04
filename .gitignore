@@ -1,5 +1,6 @@
 out
 dist
 node_modules
+native/.build/
 .vscode-test/
 *.vsix
