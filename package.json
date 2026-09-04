@@ -1,0 +1,44 @@
+{
+  "name": "editor-focus-timer",
+  "displayName": "Editor Focus Timer",
+  "description": "Local editor-focus session timer",
+  "version": "0.0.1",
+  "publisher": "local",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "rm -rf out && tsc -p ./",
+    "build:native": "swift build -c release --package-path native && mkdir -p dist/native && cp native/.build/release/editor-focus-probe dist/native/editor-focus-probe && chmod +x dist/native/editor-focus-probe",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --no-error-on-unmatched-pattern",
+    "test:ts": "npm run compile && node --test out/test/*.test.js",
+    "test:native": "swift test --package-path native",
+    "test": "npm run lint && npm run test:ts && npm run test:native",
+    "package": "npm run build:native && npm run test:ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "24.x",
+    "@types/vscode": "^1.90.0",
+    "eslint": "^10.5.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1"
+  },
+  "overrides": {
+    "diff": "^8.0.4",
+    "serialize-javascript": "^7.0.6"
+  }
+}
