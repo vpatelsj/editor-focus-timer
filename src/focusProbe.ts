@@ -1,9 +1,9 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { spawn, type ChildProcess } from 'node:child_process';
 import { createInterface, type Interface } from 'node:readline';
 import { type FocusState, parseFocusState } from './helperProtocol.js';
 
 export class FocusProbe {
-  private process: ChildProcessWithoutNullStreams | undefined;
+  private process: ChildProcess | undefined;
   private lines: Interface | undefined;
   private restartTimer: NodeJS.Timeout | undefined;
   private disposed = false;
@@ -15,7 +15,9 @@ export class FocusProbe {
       return;
     }
 
-    const process = spawn(this.executablePath, [], { stdio: 'pipe' });
+    const process = spawn(this.executablePath, [], {
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
     this.process = process;
     this.lines = createInterface({ input: process.stdout });
     this.lines.on('line', (line) => {
