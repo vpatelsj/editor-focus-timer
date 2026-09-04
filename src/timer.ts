@@ -16,6 +16,11 @@ export class SessionTimer {
     this.counting = shouldCount;
   }
 
+  reset(): void {
+    this.totalMs = 0;
+    this.previousSampleMs = undefined;
+  }
+
   get elapsedMs(): number {
     return this.totalMs;
   }

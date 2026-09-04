@@ -17,6 +17,15 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "editorFocusTimer.reset",
+        "title": "Reset",
+        "category": "Editor Focus Timer"
+      }
+    ]
+  },
   "main": "./out/extension.js",
   "scripts": {
     "vscode:prepublish": "npm run package",

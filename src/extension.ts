@@ -27,6 +27,11 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.StatusBarAlignment.Right,
     100,
   );
+  const resetCommand = vscode.commands.registerCommand(
+    'editorFocusTimer.reset',
+    () => timer.reset(),
+  );
+  status.command = 'editorFocusTimer.reset';
   let focusState: FocusState = 'unfocused';
 
   const probe = new FocusProbe(
@@ -48,13 +53,14 @@ export function activate(context: vscode.ExtensionContext): void {
       focusState === 'permission-required'
         ? 'Editor Focus Timer is paused: grant Accessibility permission in System Settings.'
         : timer.isCounting
-          ? 'Editor Focus Timer is counting focused source-editor time.'
-          : 'Editor Focus Timer is paused.';
+          ? 'Editor Focus Timer is counting focused source-editor time. Click to reset.'
+          : 'Editor Focus Timer is paused. Click to reset.';
     status.show();
   }, sampleIntervalMs);
 
   context.subscriptions.push(
     status,
+    resetCommand,
     probe,
     new vscode.Disposable(() => clearInterval(interval)),
   );

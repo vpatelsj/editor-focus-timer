@@ -35,6 +35,22 @@ describe('SessionTimer', () => {
 
     assert.equal(timer.elapsedMs, 200);
   });
+
+  it('resets elapsed time and excludes the pre-reset interval', () => {
+    const timer = new SessionTimer();
+
+    timer.sample(1_000, true);
+    timer.sample(1_500, true);
+    timer.reset();
+
+    assert.equal(timer.elapsedMs, 0);
+    assert.equal(timer.isCounting, true);
+
+    timer.sample(2_000, true);
+    assert.equal(timer.elapsedMs, 0);
+    timer.sample(2_250, true);
+    assert.equal(timer.elapsedMs, 250);
+  });
 });
 
 describe('formatElapsed', () => {
